@@ -1,0 +1,12 @@
+	{ 
+		
+		"rockDown": [
+			
+				{
+					"density": 2, "friction": 0, "bounce": 0, 
+					"filter": { "categoryBits": 1, "maskBits": 65535 },
+					"shape": [   71, 238  ,  62, 239  ,  0, 0  ,  108, 0  ]
+				}  
+		]
+		
+	}

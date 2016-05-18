@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <title>Socket.io</title>
+        <style type="text/css">
+	        body {
+	        	margin: 0;
+	        	padding: 0;
+	        	background: black;
+	        }
+	    	#desktop {
+	    		display: none;
+	    		width: 800px;
+	    		height: 600px;
+	    		margin: 25px auto;
+	    		border: 2px solid white;
+	    	}
+	    	#mobile {
+	    		display: none;
+	    	}
+        </style>
+    </head>
+
+    <body>
+    	<div id="desktop"></div>
+
+    	<div id="mobile"></div>
+
+
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="js/phaser.min.js"></script>
+        <script>
+		    var isMobile = false; //initiate as false
+		    // device detection
+		    if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
+		        || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) isMobile = true;
+
+			var QueryString = function () {
+				// This function is anonymous, is executed immediately and 
+				// the return value is assigned to QueryString!
+				var query_string = {};
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				
+				for (var i=0;i<vars.length;i++) {
+					var pair = vars[i].split("=");
+					// If first entry with this name
+					if (typeof query_string[pair[0]] === "undefined") {
+						query_string[pair[0]] = decodeURIComponent(pair[1]);
+						// If second entry with this name
+					} else if (typeof query_string[pair[0]] === "string") {
+						var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+						query_string[pair[0]] = arr;
+						// If third or later entry with this name
+					} else {
+						query_string[pair[0]].push(decodeURIComponent(pair[1]));
+					}
+				}
+				return query_string;
+			}();
+
+			var base_url = 'http://85.168.69.242:8080/';
+			var socket = io.connect(base_url);
+
+			var GLOBAL_ID = null;
+			var game;
+
+			var sendDataTimer = 15; // milliseconds
+			var takeAccelerometer = false;
+			var takeGyroscope = true;
+
+			var mobileCoordinates = {
+				"ID": GLOBAL_ID,
+				"is_accelerometer": false,
+				"accelerometer": {}, // x, y, z, acceleration_x, acceleration_y, acceleration_z, alpha, beta, gamma
+				"is_gyroscope": false,
+				"gyroscope": {} // alpha, beta, gamma
+			}
+
+			function logMobileData() {
+				if (takeAccelerometer && window.DeviceMotionEvent != undefined) {
+					mobileCoordinates["is_accelerometer"] = true;
+
+					window.ondevicemotion = function(e) {
+						var phoneX = Math.round(e.accelerationIncludingGravity.x * 100) / 100;
+						var phoneY = Math.round(e.accelerationIncludingGravity.y * 100) / 100;
+						var phoneZ = Math.round(e.accelerationIncludingGravity.z * 100) / 100;
+
+						var data = {
+							"x": phoneX,
+							"y": phoneY,
+							"z": phoneZ,
+							"acceleration_x": e.acceleration.x,
+							"acceleration_y": e.acceleration.y,
+							"acceleration_z": e.acceleration.z,
+							"alpha": 0,
+							"beta": 0,
+							"gamma": 0
+						}
+
+						if (e.rotationRate) {
+							var phoneAlpha = Math.round(e.rotationRate.alpha * 100) / 100;
+							var phoneBeta = Math.round(e.rotationRate.beta * 100) / 100;
+							var phoneGamma = Math.round(e.rotationRate.gamma * 100) / 100;
+
+							data["alpha"] = phoneAlpha;
+							data["beta"] = phoneBeta;
+							data["gamma"] = phoneGamma;
+						}
+
+						mobileCoordinates["accelerometer"] = data;
+					}
+				}
+
+				if (takeGyroscope && window.DeviceOrientationEvent != undefined) {
+					mobileCoordinates["is_gyroscope"] = true;
+
+					window.ondeviceorientation = function(e) {
+						alpha = (Math.round(e.alpha) * 100) / 100;
+						beta = (Math.round(e.beta) * 100) / 100;
+						gamma = (Math.round(e.gamma) * 100) / 100;
+
+						var data = {
+							"alpha": alpha,
+							"beta": beta,
+							"gamma": gamma
+						}
+
+						mobileCoordinates["gyroscope"] = data;
+					}
+				}
+			}
+
+
+
+			function launchSockets() {
+				socket.on('connect_ok', function(message) {
+					if (!isMobile) {
+						socket.emit('is_desktop');
+					} else {
+						if (QueryString.ID) {
+							socket.emit('is_mobile', QueryString.ID);
+						}
+					}
+				});
+
+				socket.on('generated_id', function(ID) {
+					GLOBAL_ID = ID;
+					if (game.state) {
+						game.state.start('LinkSmartphone');
+					}
+				});
+
+				socket.on('all_ok', function(result) {
+					if (result) {
+						if (isMobile) {
+							mobileCoordinates["ID"] = QueryString.ID;
+
+							window.onbeforeunload = function() {
+								socket.emit('mobile_leave', GLOBAL_ID);
+							};
+
+							// enable vibration support
+							navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+
+							if (navigator.vibrate) {
+								navigator.vibrate(500); // vibrate for 500 ms
+							}
+
+							logMobileData();
+
+							setInterval(function() {
+								socket.emit('message', mobileCoordinates);
+							}, sendDataTimer);
+						} else {
+							socket.on('message', function(message) {
+								mobileCoordinates = message;
+							});
+
+							game.state.start('MainMenu');
+						}
+					} else {
+						// Todo
+					}
+				});
+			}
+
+			function launchPhaserGame() {
+				game = new Phaser.Game(800, 600, Phaser.AUTO, 'desktop');
+
+				game.state.add('Boot', Shooter.Boot);
+				game.state.add('Preloader', Shooter.Preloader);
+				game.state.add('LinkSmartphone', Shooter.LinkSmartphone);
+				game.state.add('MainMenu', Shooter.MainMenu);
+				game.state.add('Game', Shooter.Game);
+
+				game.state.start('Boot');
+			}
+
+			var Shooter = {};
+			Shooter.Game = function(game) {
+				/*this._player = null;
+				this._candyGroup = null;
+				this._spawnCandyTimer = 0;
+				this._fontStyle = null;
+				Candy._scoreText = null;
+				Candy._score = 0;
+				Candy._health = 0;*/
+			};
+
+			Shooter.Game.prototype = {
+				create: function() {
+					// ...
+				},
+				managePause: function() {
+					this.game.paused = true;
+					var pausedText = this.add.text(100, 250, "Game paused.\nTap anywhere to continue.", this._fontStyle);
+					this.input.onDown.add(function(){
+						pausedText.destroy();
+						this.game.paused = false;
+					}, this);
+				},
+				update: function() {
+					// ...
+				}
+			};
+
+			Shooter.Boot = function(game) {};
+			Shooter.Boot.prototype = {
+				preload: function() {
+					//this.load.image('bg', 'assets/img/deepblue.png');
+				},
+				create: function() {
+					/*this.input.maxPointers = 1;
+					this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+					this.scale.pageAlignHorizontally = true;
+					this.scale.pageAlignVertically = true;
+					this.scale.setScreenSize(true);*/
+					this.state.start('Preloader');
+				}
+			};
+
+			Shooter.Preloader = function(game) {};
+			Shooter.Preloader.prototype = {
+				preload: function() {
+					this.stage.backgroundColor = '#B4D9E7';
+
+					this.load.image('cursor', 'assets/img/HUD/crosshair_outline_large.png');
+
+					/*this.preloadBar = this.add.sprite((Candy.GAME_WIDTH-311)/2, (Candy.GAME_HEIGHT-27)/2, 'preloaderBar');
+					this.load.setPreloadSprite(this.preloadBar);
+
+					this.load.image('background', 'assets/img/deepblue.png');
+					/*this.load.image('background', 'img/background.png');
+					this.load.image('floor', 'img/floor.png');
+					this.load.image('monster-cover', 'img/monster-cover.png');
+					this.load.image('title', 'img/title.png');
+					this.load.image('game-over', 'img/gameover.png');
+					this.load.image('score-bg', 'img/score-bg.png');
+					this.load.image('button-pause', 'img/button-pause.png');
+
+					this.load.spritesheet('candy', 'img/candy.png', 82, 98);
+					this.load.spritesheet('monster-idle', 'img/monster-idle.png', 103, 131);
+					this.load.spritesheet('button-start', 'img/button-start.png', 401, 143);*/
+				},
+				create: function() {
+					//this.state.start('LinkSmartphone');
+				}
+			};
+
+			Shooter.LinkSmartphone = function(game) {};
+			Shooter.LinkSmartphone.prototype = {
+				create: function() {
+					if (GLOBAL_ID != null) {
+						var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+
+						var text1 = this.add.text(0, 0, "Go to", style);
+						var text2 = this.add.text(0, 0, base_url + "?ID=" + GLOBAL_ID , style);
+						var text3 = this.add.text(0, 0, "with your smartphone", style);
+
+						text1.setTextBounds(0, 190, 800, 50);
+						text2.setTextBounds(0, 260, 800, 50);
+						text3.setTextBounds(0, 330, 800, 50);
+					}
+				}
+			};
+
+			Shooter.MainMenu = function(game) {};
+			Shooter.MainMenu.prototype = {
+				create: function() {
+					this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+					this.midHeight = this.game.height / 2;
+					this.midWidth = this.game.width / 2;
+
+					var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+					
+					var text = this.add.text(0, 0, "Leave My Duck Alone", style);
+					text.setTextBounds(0, 20, 800, 50);
+
+					this.text1 = this.add.text(0, 0, "Alpha: ", style);
+					this.text2 = this.add.text(0, 0, "Beta: ", style);
+					this.text3 = this.add.text(0, 0, "Gamma: ", style);
+					this.text4 = this.add.text(0, 0, "Change X: ", style);
+					this.text5 = this.add.text(0, 0, "Change Y: ", style);
+
+					this.text1.setTextBounds(0, 70, 800, 50);
+					this.text2.setTextBounds(0, 120, 800, 50);
+					this.text3.setTextBounds(0, 170, 800, 50);
+					this.text4.setTextBounds(0, 220, 800, 50);
+					this.text5.setTextBounds(0, 270, 800, 50);
+
+					this.cursor = this.add.sprite(this.midWidth, this.midHeight, 'cursor');
+					this.cursor.anchor.setTo(0.5, 0.5);
+
+					// ALPHA => X
+					this.previousAlpha = null;
+
+					// BETA => Y
+					this.previousBeta = null;
+
+					this.coeffMoveX = 7;
+					this.coeffMoveY = 5;
+
+				},
+				startGame: function() {
+					//this.state.start('Game');
+				},
+				update: function() {
+					var mobileGyro = mobileCoordinates["gyroscope"];
+
+					if (!isNaN(mobileGyro.alpha) && !isNaN(mobileGyro.beta)) {
+						if (this.previousAlpha == null) { this.previousAlpha = mobileGyro.alpha; }
+						if (this.previousBeta == null) { this.previousBeta = mobileGyro.beta; }
+
+						change_x = 0;
+
+						if (this.previousAlpha >= 275 && mobileGyro.alpha <= 125) { // Max 360
+							change_x = ((360 - this.previousAlpha) + mobileGyro.alpha) * this.coeffMoveX;
+						} else if (this.previousAlpha <= 125 && mobileGyro.alpha >= 275) {
+							change_x = (this.previousAlpha + (360 - mobileGyro.alpha)) * this.coeffMoveX;
+						} else {
+							change_x = (this.previousAlpha - mobileGyro.alpha) * this.coeffMoveX;
+						}
+
+						change_y = (this.previousBeta - mobileGyro.beta) * this.coeffMoveY;
+
+						this.previousAlpha = mobileGyro.alpha;
+						this.previousBeta = mobileGyro.beta;
+
+						/*this.text1.setText("Alpha (X): " + mobileGyro.alpha);
+						this.text2.setText("Beta (Y): " + mobileGyro.beta);
+						this.text3.setText("Gamma: " + mobileGyro.gamma);
+
+						/*this.text4.setText("Change X: " + change_x);
+						this.text5.setText("Change Y: " + change_y);*/
+
+						this.cursor.x += Math.round(change_x);
+						this.cursor.y += Math.round(change_y);
+					}
+				}
+			};
+
+
+			(function() {
+				if (isMobile) {
+					document.getElementById("mobile").style.display = "block";
+
+					if (!takeAccelerometer || (takeAccelerometer && window.DeviceMotionEvent != undefined)) {
+						if (!takeGyroscope || (takeGyroscope && window.DeviceOrientationEvent != undefined)) {
+							launchSockets();
+						}
+					}
+				} else {
+					document.getElementById("desktop").style.display = "block";
+					launchPhaserGame();
+					launchSockets();
+				}
+			})();
+			
+        </script>
+    </body>
+</html>

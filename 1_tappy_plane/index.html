@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+	<head>
+        <meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+		<title>Tappy Plane</title>
+
+		<link href="css/styles.css" rel="stylesheet" type="text/css">
+
+        <script src="/socket.io/socket.io.js"></script>
+		<script src="js/phaser.min.js"></script>
+		<script src="js/game.js"></script>
+		<script src="js/phone_synchro.js"></script>
+	</head>
+	<body>
+    	<div id="desktop">
+    		<h2 id="title_link">Go to<br/><span id="code_link"></span><br/>with your smartphone</h2>
+			<div id="tappy-plane"></div>
+    	</div>
+
+    	<div id="mobile">
+    		<img src="assets/images/yellow_circle.png" id="fire_btn" />
+    	</div>
+
+		<script type="text/javascript">
+				var base_url = 'http://85.168.69.242:8080/';
+				var socket   = io.connect(base_url);
+				var isMobile = isMobile();
+
+				if (isMobile) {
+					var wHeight = window.innerHeight;
+					var btnFire = document.getElementById("fire_btn");
+					var btnHeight = btnFire.height;
+					var mT = wHeight / 2 - btnHeight / 2;
+
+					btnFire.style.marginTop = mT + "px";
+
+					document.getElementById("mobile").style.display = "block";
+				} else {
+					document.getElementById("desktop").style.display = "block";
+				}
+
+				launchSockets(socket, isMobile, 'title_link', 'code_link');
+		</script>
+	</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <title>Leave my duck alone</title>
+
+        <style type="text/css">
+            * {
+                -webkit-touch-callout: none;
+                -webkit-tap-highlight-color: transparent;
+                -webkit-user-select: none;
+                -webkit-text-size-adjust: none;
+            }
+			body {
+				margin: 0;
+				padding: 0;
+				background: black;
+			}
+			#desktop {
+				display: none;
+				width: 800px;
+				height: 600px;
+				margin: 25px auto;
+				border: 2px solid white;
+			}
+			#mobile {
+				display: none;
+				text-align: center;
+			}
+        </style>
+    </head>
+
+    <body>
+    	<div id="desktop"></div>
+
+    	<div id="mobile">
+    		<img src="assets/img/yellow_circle.png" id="fire_btn" />
+    	</div>
+
+
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="js/phaser.min.js"></script>
+        <script src="js/phaser-debug.js"></script>
+        <script type="text/javascript" src="js/jquery-2.2.2.min.js"></script>
+        <script>
+        	function isMobile() {
+			    var isMobile = false; //initiate as false
+			    // device detection
+			    if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
+			        || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) isMobile = true;
+		        return isMobile;
+        	}
+
+			var QueryString = function () {
+				// This function is anonymous, is executed immediately and 
+				// the return value is assigned to QueryString!
+				var query_string = {};
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				
+				for (var i=0;i<vars.length;i++) {
+					var pair = vars[i].split("=");
+					// If first entry with this name
+					if (typeof query_string[pair[0]] === "undefined") {
+						query_string[pair[0]] = decodeURIComponent(pair[1]);
+						// If second entry with this name
+					} else if (typeof query_string[pair[0]] === "string") {
+						var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+						query_string[pair[0]] = arr;
+						// If third or later entry with this name
+					} else {
+						query_string[pair[0]].push(decodeURIComponent(pair[1]));
+					}
+				}
+				return query_string;
+			}();
+
+        	var isMobile = isMobile();
+
+			var base_url = 'http://85.168.69.242:8080/';
+			var socket = io.connect(base_url);
+
+			var GLOBAL_ID = null;
+			var game;
+
+			var sendDataTimer = 10; // milliseconds
+			var takeAccelerometer = false;
+			var takeGyroscope = true;
+
+			var isFire = false;
+            var dir = 0, ref = 0, heading = 0;
+
+            var bypassPhone = true;
+            var debug = false;
+
+			var mobileCoordinates = {
+				"ID": GLOBAL_ID,
+				"gyroscope": {} // alpha, beta, gamma, angle, heading
+			}
+
+			var oneGame;
+
+			var extraData = {
+				'absLeftX': 0,
+				'topY': 0,
+				'leftX': 0,
+				'rightX': 0,
+				'sumY': 0,
+				'gameHeight': 0,
+				'leftXeffective': 0,
+				'xFromLeftTemp': 0,
+				'rightXeffective': 0,
+				'sumX': 0,
+				'gameWidth': 0
+			}
+
+			function logMobileData() {
+				window.ondeviceorientation = function(e) {
+					beta = Math.round(e.beta * 100) / 100;
+
+					if (typeof e.webkitCompassHeading !== 'undefined') {
+						direction = e.webkitCompassHeading;
+						if (typeof window.orientation !== 'undefined') {
+							direction += window.orientation;
+						}
+					} else {
+						// http://dev.w3.org/geo/api/spec-source-orientation.html#deviceorientation
+						direction = 360 - e.alpha;
+					}
+
+					//delta = Math.round(direction) - ref;
+					ref = Math.round(direction);
+					//if (delta < -180) { delta += 360; }
+					//if (delta > 180)  { delta -= 360; }
+
+					//dir += delta;
+
+					heading = direction;
+					while (heading >= 360) { heading -= 360; }
+					while (heading < 0)    { heading += 360; }
+
+					heading = Math.round(heading);
+
+					var data = {
+						"beta": beta,
+						"heading": heading
+					}
+
+					mobileCoordinates["gyroscope"] = data;
+				}
+			}
+
+			function getXandYfromPhoneData(mobileGyro) {
+				// ===> START Y
+				betaTemp = mobileGyro.beta + extraData['topY'];
+				move_percentY = betaTemp / extraData['sumY'];
+				change_y = extraData['gameHeight'] * move_percentY;
+				new_Y = extraData['gameHeight'] - change_y;
+				new_Y = (new_Y <= 0) ? 0 : new_Y;
+				new_Y = (new_Y >= extraData['gameHeight']) ? extraData['gameHeight'] : new_Y;
+				// ===> END Y
+
+				xFromLeftTemp = null;
+
+				// ===> START X
+				if (extraData['leftX'] < 0) {
+					if (mobileGyro.heading >= extraData['leftXeffective']) {
+						xFromLeftTemp = mobileGyro.heading - extraData['leftXeffective'];
+					} else if (mobileGyro.heading <= extraData['rightXeffective']) {
+						xFromLeftTemp = extraData['absLeftX'] + mobileGyro.heading;
+					} else {
+						// En dehors
+						xFromLeftTemp = null;
+					}
+				} else if (extraData['rightX'] > 360) {
+					if (mobileGyro.heading >= extraData['leftXeffective']) {
+						xFromLeftTemp = mobileGyro.heading - extraData['leftXeffective'];
+					} else if (mobileGyro.heading <= extraData['rightXeffective']) {
+						xFromLeftTemp = 360 - extraData['leftXeffective'] + mobileGyro.heading;
+					} else {
+						// En dehors
+						xFromLeftTemp = null;
+					}
+				} else {
+					xFromLeftTemp = mobileGyro.heading - extraData['leftX'];
+				}
+
+				new_X = 0;
+				if (xFromLeftTemp !== null) {
+					move_percentX = xFromLeftTemp / extraData['sumX'];
+					new_X = extraData['gameWidth'] * move_percentX;
+
+					new_X = (new_X <= 0) ? 0 : new_X;
+					new_X = (new_X >= extraData['gameWidth']) ? extraData['gameWidth'] : new_X;
+				}
+				// ===> END X
+
+				return {
+					'x': new_X,
+					'y': new_Y
+				};
+			}
+
+			function launchSockets() {
+				socket.on('connect_ok', function(message) {
+					if (!isMobile) {
+						socket.emit('is_desktop');
+					} else {
+						if (QueryString.ID) {
+							socket.emit('is_mobile', QueryString.ID);
+						}
+					}
+				});
+
+				socket.on('generated_id', function(ID) {
+					GLOBAL_ID = ID;
+					displayCode();
+				});
+
+				socket.on('all_ok', function(result) {
+					if (result) {
+						if (isMobile) {
+							mobileCoordinates["ID"] = QueryString.ID;
+
+							window.onbeforeunload = function() {
+								socket.emit('mobile_leave', GLOBAL_ID);
+							};
+
+							// enable vibration support
+							navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+
+							if (navigator.vibrate) {
+								navigator.vibrate(500); // vibrate for 500 ms
+							}
+
+							logMobileData();
+
+							setInterval(function() {
+								socket.emit('message', mobileCoordinates);
+							}, sendDataTimer);
+						} else {
+							socket.on('message', function(message) {
+								mobileCoordinates = message;
+							});
+
+							startGame();
+						}
+					} else {
+						// Todo
+					}
+				});
+
+				socket.on('fire', function() {
+					isFire = true;
+				});
+
+				// todo SUPPRIMER CA
+				if (bypassPhone) {
+					setTimeout(function() {
+						startGame();
+					}, 1000);
+				}
+			}
+
+			function launchPhaserGame() {
+				game = new Phaser.Game(800, 600, Phaser.AUTO, 'desktop');
+
+				game.state.add('Boot', Shooter.Boot);
+				game.state.add('Preloader', Shooter.Preloader);
+				game.state.add('LinkSmartphone', Shooter.LinkSmartphone);
+				game.state.add('MainMenu', Shooter.MainMenu);
+				game.state.add('Game', Shooter.Game);
+
+				game.state.start('Boot');
+			}
+
+
+			var DuckTargetGroup = function(game, parent) {
+				Phaser.Group.call(this, game, parent);
+
+				this.velocityX = -300;
+
+				var duckRnd = this.game.rnd.integerInRange(1, 12); // duck1 à 12
+				var stickRnd = this.game.rnd.integerInRange(1, 4); // wood_stick1 à 4
+				var direction = this.game.rnd.integerInRange(1, 2); // 1 : turned to right side, 2 : to left one
+
+				this.duckWidth = 114;
+				this.duckHeight = 109;
+
+				this.duckSprite = this.game.add.sprite(0, 0, 'duck' + duckRnd);
+				this.stickSprite = this.game.add.sprite(114/2 - 34/2, 109, 'wood_stick' + stickRnd);
+
+				if (direction == 2) {
+					this.duckSprite.scale.x *= -1;
+					this.game.add.tween(this).to({x: this.duckSprite.x - 1000}, 6000, Phaser.Easing.Linear.NONE, true);
+				} else {
+					this.game.add.tween(this).to({x: this.duckSprite.x + 1000}, 6000, Phaser.Easing.Linear.NONE, true);
+				}
+
+				this.game.add.tween(this).to( { y: this.duckSprite.y + 40 }, 1000, Phaser.Easing.Linear.NONE, true, 0, -1, true);
+
+				//this.duckSprite.anchor.setTo(0.5, 0.5);
+				//this.stickSprite.anchor.setTo(0.5, 0.5);
+
+				this.add(this.duckSprite);
+				this.add(this.stickSprite);
+
+				//this.game.debug.spriteBounds(this.duckSprite);
+				//this.game.debug.spriteCorners(this.duckSprite, true, true);
+			};
+			DuckTargetGroup.prototype = Object.create(Phaser.Group.prototype);
+			DuckTargetGroup.prototype.constructor = DuckTargetGroup;
+			DuckTargetGroup.prototype.reset = function(x, y) {
+				this.duckSprite.reset(x, y);
+				this.stickSprite.reset(x, y + 109);
+
+				this.exists = true;
+			};
+			DuckTargetGroup.prototype.checkWorldBounds = function() {  
+				/*if(!this.topRock.inWorld) {
+					this.exists = false;
+				}*/
+			};
+			DuckTargetGroup.prototype.update = function() {  
+				//this.checkWorldBounds(); 
+				//this.game.debug.spriteBounds(this.duckSprite);
+				//console.log(this.x + " - " + this.y);
+			};
+			DuckTargetGroup.prototype.timeOver = function() {
+				this.exists = false;
+			};
+			DuckTargetGroup.prototype.isTouched = function(x, y) {
+				console.log("2> " + x + " - " + y);
+				console.log("3> " + this.duckSprite.x + " - " + this.duckSprite.y);
+				console.log("4> " + this.duckWidth + " - " + this.duckHeight);
+				/*console.log(this.x + " - " + this.y);
+				console.log(this.width + " - " + this.height);*/
+
+				if (x >= this.duckSprite.x && y >= this.duckSprite.y) {
+					if (x <= (this.duckSprite.x + this.duckWidth) && y <= (this.duckSprite.y + this.duckHeight)) {
+						return true;
+					}
+				}
+				return false;
+			};
+
+
+			var Shooter = {};
+			Shooter.Game = function(game) {};
+
+			Shooter.Game.prototype = {
+				create: function() {
+					//this.game.physics.startSystem(Phaser.Physics.ARCADE);
+					this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'background');
+
+					this.BASE_BETA = null;
+					this.BASE_HEADING = null; // de 0 à 360
+					this.ALPHA_DIFF = 35;
+
+					this.leftX = null;
+					this.rightX = null;
+					this.sumX = this.ALPHA_DIFF * 2;
+					this.xFromLeftTemp = null; // X that will be calculated which correspond to the x from the 
+					this.leftXeffective = null;
+					this.rightXeffective = null;
+
+					// BETA
+					this.bottomY = -20;
+					this.topY = 20;
+					this.sumY = this.topY - this.bottomY;
+
+					extraData['topY'] = this.topY;
+					extraData['sumY'] = this.sumY;
+					extraData['sumX'] = this.sumX;
+					extraData['gameHeight'] = this.game.height;
+					extraData['gameWidth'] = this.game.width;
+
+					this.tree1 = this.game.add.tileSprite(30, this.game.height - 450, 143, 244, 'tree_oak');
+					this.tree1.scale.setTo(0.7, 0.7);
+
+					this.grass1 = this.game.add.tileSprite(0, this.game.height - 310, this.game.width, 100, 'grass1');
+
+					this.tree2 = this.game.add.tileSprite(this.game.width - 170, this.game.height - 395, 119, 255, 'tree_pine');
+					this.tree2.scale.setTo(0.8, 0.8);
+
+					// add a timer
+					this.ducks = this.game.add.group();
+					this.duckGenerator = this.game.time.events.loop(Phaser.Timer.SECOND * 3, this.generateDuckTarget, this);
+					this.duckGenerator.timer.start();
+
+					this.generateDuckTarget();
+
+					this.water1 = this.game.add.tileSprite(0, this.game.height - 265, this.game.width, 100, 'water2_background');
+					this.water1.autoScroll(40, 0);
+
+					this.water2 = this.game.add.tileSprite(0, this.game.height - 235, this.game.width, 100, 'water_background');
+					this.water2.autoScroll(-40, 0);
+
+
+					this.leftBg = this.game.add.tileSprite(0, 60, 131, 426, 'curtain');
+					this.rightBg = this.game.add.tileSprite(this.game.width, 60, 131, 426, 'curtain');
+					this.rightBg.scale.x *= -1;
+
+					this.topBg = this.game.add.tileSprite(0, 0, this.game.width, 80, 'curtain_straight');
+					this.topBg.scale.setTo(1.2, 1.2);
+
+					this.bottomBg = this.game.add.tileSprite(0, this.game.height - 156, this.game.width, 116, 'bg_wood_bottom');
+					this.bottomBg.scale.setTo(1.5, 1.5);
+
+					this.cursor = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'cursor');
+					this.cursor.anchor.setTo(0.5, 0.5);
+
+					this.rifle = this.game.add.tileSprite(this.game.width - 150, this.game.height - 200, 142, 319, 'rifle');
+
+					this.game.input.onDown.add(this.fireEvent, this);
+				},
+				generateDuckTarget: function() {
+					var nbCases = Math.round(this.game.width / 20);
+
+					var duckX = this.game.rnd.integerInRange(10, nbCases - 10) * 20;
+					var duckY = this.game.height - 345;
+
+					var duckGroup = this.ducks.getFirstExists(false);
+					if(!duckGroup) {
+						duckGroup = new DuckTargetGroup(this.game, this.ducks);
+					}
+					duckGroup.reset(duckX, duckY);
+					//this.time.events.add(2000, duckGroup.timeOver, duckGroup);
+					this.time.events.add(4000, duckGroup.destroy, duckGroup);
+				},
+				update: function() {
+					var mobileGyro = mobileCoordinates["gyroscope"];
+					
+					if (!bypassPhone && this.BASE_HEADING == null && mobileGyro.heading == 0) {
+						return;
+					}
+
+					if (!bypassPhone && this.BASE_HEADING == null && !isNaN(mobileGyro.heading)) { // FIRST TIME
+						this.BASE_HEADING = mobileGyro.heading;
+
+						this.leftX = this.BASE_HEADING - this.ALPHA_DIFF;
+						this.rightX = this.BASE_HEADING + this.ALPHA_DIFF;
+
+						this.rightXeffective = this.rightX % 360;
+						this.leftXeffective = (this.leftX < 0) ? 360 - Math.abs(this.leftX) : this.leftX;
+
+						extraData['leftX'] = this.leftX;
+						extraData['rightX'] = this.rightX;
+						extraData['absLeftX'] = Math.abs(this.leftX);
+						extraData['leftXeffective'] = this.leftXeffective;
+						extraData['rightXeffective'] = this.rightXeffective;
+					}
+
+					if (bypassPhone || this.leftXeffective !== null) {
+						if (bypassPhone) {
+							this.cursor.x = this.game.input.mousePointer.x;
+							this.cursor.y = this.game.input.mousePointer.y;
+						} else {
+							res = getXandYfromPhoneData(mobileGyro);
+							this.cursor.x = res.x;
+							this.cursor.y = res.y;
+						}
+
+						this.rifle.x = this.cursor.x + 50;
+
+						if (!bypassPhone && isFire) {
+							this.fireEvent();
+							isFire = false;
+						}
+					}
+				},
+				fireEvent: function() {
+					xTest = this.cursor.x;
+					yTest = this.cursor.y;
+
+					impact = this.game.add.tileSprite(xTest, yTest, 20, 20, 'shot_grey_small');
+					impact.anchor.setTo(0.5, 0.5);
+					this.time.events.add(2000, impact.destroy, impact);
+
+					this.ducks.forEach(function(duck) {
+						if (duck.isTouched(xTest, yTest)) {
+							duck.destroy();
+						}
+					});
+				},
+				managePause: function() {
+					this.game.paused = true;
+					var pausedText = this.add.text(100, 250, "Game paused.\nTap anywhere to continue.", this._fontStyle);
+					this.input.onDown.add(function(){
+						pausedText.destroy();
+						this.game.paused = false;
+					}, this);
+				}
+			};
+
+			Shooter.Boot = function(game) {};
+			Shooter.Boot.prototype = {
+				preload: function() {
+					if (debug) {
+						this.game.plugins.add(Phaser.Plugin.Debug);
+					}
+				},
+				create: function() {
+					this.state.start('Preloader');
+				}
+			};
+
+			Shooter.Preloader = function(game) {};
+			Shooter.Preloader.prototype = {
+				preload: function() {
+					this.stage.backgroundColor = '#B4D9E7';
+
+					this.load.image('background', 'assets/img/Stall/bg_wood.png');
+					this.load.image('water_background', 'assets/img/Stall/water1.png');
+					this.load.image('water2_background', 'assets/img/Stall/water2.png');
+					this.load.image('bg_wood_bottom', 'assets/img/Stall/bg_wood_bottom.png');
+					this.load.image('curtain', 'assets/img/Stall/curtain.png');
+					this.load.image('curtain_straight', 'assets/img/Stall/curtain_straight.png');
+					this.load.image('grass1', 'assets/img/Stall/grass1.png');
+					this.load.image('grass2', 'assets/img/Stall/grass2.png');
+					this.load.image('tree_oak', 'assets/img/Stall/tree_oak.png');
+					this.load.image('tree_pine', 'assets/img/Stall/tree_pine.png');
+					this.load.image('cursor', 'assets/img/HUD/crosshair_outline_large.png');
+					this.load.image('rifle', 'assets/img/Objects/rifle.png');
+					this.load.image('shot_grey_small', 'assets/img/Objects/shot_grey_small.png');
+
+					this.load.image('buttonOff', 'assets/img/HUD/buttonDefault.png');
+					this.load.image('buttonOn', 'assets/img/HUD/buttonSelected.png');
+
+-					this.load.image('duck1', 'assets/img/Objects/duck_brown.png');
+-					this.load.image('duck2', 'assets/img/Objects/duck_outline_brown.png');
+					this.load.image('duck3', 'assets/img/Objects/duck_outline_target_brown.png');
+					this.load.image('duck4', 'assets/img/Objects/duck_outline_target_white.png');
+					this.load.image('duck5', 'assets/img/Objects/duck_outline_target_yellow.png');
+					this.load.image('duck6', 'assets/img/Objects/duck_outline_white.png');
+					this.load.image('duck7', 'assets/img/Objects/duck_outline_yellow.png');
+					this.load.image('duck8', 'assets/img/Objects/duck_target_brown.png');
+					this.load.image('duck9', 'assets/img/Objects/duck_target_white.png');
+					this.load.image('duck10', 'assets/img/Objects/duck_target_yellow.png');
+					this.load.image('duck11', 'assets/img/Objects/duck_white.png');
+					this.load.image('duck12', 'assets/img/Objects/duck_yellow.png');
+
+					this.load.image('wood_stick1', 'assets/img/Objects/stick_wood_outline.png');
+					this.load.image('wood_stick2', 'assets/img/Objects/stick_wood.png');
+					this.load.image('wood_stick3', 'assets/img/Objects/stick_woodFixed_outline.png');
+					this.load.image('wood_stick4', 'assets/img/Objects/stick_woodFixed.png');
+
+					this.load.image('target1', 'assets/img/Objects/target_colored_outline.png');
+					this.load.image('target2', 'assets/img/Objects/target_colored.png');
+					this.load.image('target3', 'assets/img/Objects/target_red1_outline.png');
+					this.load.image('target4', 'assets/img/Objects/target_red1.png');
+					this.load.image('target5', 'assets/img/Objects/target_red2_outline.png');
+					this.load.image('target6', 'assets/img/Objects/target_red2.png');
+					this.load.image('target7', 'assets/img/Objects/target_red3_outline.png');
+					this.load.image('target8', 'assets/img/Objects/target_red3.png');
+					this.load.image('target9', 'assets/img/Objects/target_white_outline.png');
+					this.load.image('target10', 'assets/img/Objects/target_white.png');
+				},
+				create: function() {}
+			};
+
+			Shooter.LinkSmartphone = function(game) {};
+			Shooter.LinkSmartphone.prototype = {
+				create: function() {
+					if (GLOBAL_ID != null) {
+						var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+
+						var text1 = this.add.text(0, 0, "Go to", style);
+						var text2 = this.add.text(0, 0, base_url + "?ID=" + GLOBAL_ID , style);
+						var text3 = this.add.text(0, 0, "with your smartphone", style);
+
+						text1.setTextBounds(0, 190, 800, 50);
+						text2.setTextBounds(0, 260, 800, 50);
+						text3.setTextBounds(0, 330, 800, 50);
+					}
+				}
+			};
+
+			Shooter.MainMenu = function(game) {};
+			Shooter.MainMenu.prototype = {
+				create: function() {
+					this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'background');
+
+					this.button = this.game.add.button(this.game.world.centerX, -100, 'buttonOn', this.startGame, this, 2, 1, 0);
+					this.button.scale.setTo(2, 2);
+					this.button.anchor.setTo(0.5, 0.5);
+					this.button.onInputOver.add(this.over, this);
+					this.button.onInputOut.add(this.out, this);
+					this.button.onInputUp.add(this.up, this);
+
+					var style = { font: "bold 42px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+
+					var text = this.add.text(0, 0, "Leave My Duck Alone", style);
+					text.setTextBounds(0, 20, 800, 50);
+
+					this.BASE_BETA = null;
+					this.BASE_HEADING = null; // de 0 à 360
+					this.ALPHA_DIFF = 35;
+
+					this.leftX = null;
+					this.rightX = null;
+					this.sumX = this.ALPHA_DIFF * 2;
+					this.xFromLeftTemp = null; // X that will be calculated which correspond to the x from the 
+					this.leftXeffective = null;
+					this.rightXeffective = null;
+
+					// BETA
+					this.bottomY = -20;
+					this.topY = 20;
+					this.sumY = this.topY - this.bottomY;
+
+					extraData['topY'] = this.topY;
+					extraData['sumY'] = this.sumY;
+					extraData['sumX'] = this.sumX;
+					extraData['gameHeight'] = this.game.height;
+					extraData['gameWidth'] = this.game.width;
+
+					tween = this.game.add.tween(this.button).to({y:250}, 350, Phaser.Easing.Linear.NONE, true, 0, 0, false);
+					tween.onComplete.add(this.endTween, this)
+
+					this.cursor = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'cursor');
+					this.cursor.anchor.setTo(0.5, 0.5);
+
+					this.game.input.onDown.add(this.onclick, this);
+				},
+				onclick: function() {
+					xTest = this.cursor.x;
+					yTest = this.cursor.y;
+
+					oneGame = this;
+
+					if (xTest >= this.button.x && yTest >= this.button.y) {
+						if (xTest <= (this.button.x + this.button.width) && yTest <= (this.button.y + this.button.height)) {
+							this.startGame();
+						}
+					}
+				},
+				endTween: function() {
+					var txt = this.game.add.text(0, 0, "I don't give a duck!", { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
+					txt.setTextBounds(this.game.world.centerX - 75, 225, 150, 50);
+				},
+				startGame: function() {
+					this.state.start('Game');
+				},
+				over: function() {},
+				out: function() {},
+				up: function() {},
+				update: function() {
+					var mobileGyro = mobileCoordinates["gyroscope"];
+					
+					if (!bypassPhone && this.BASE_HEADING == null && mobileGyro.heading == 0) {
+						return;
+					}
+
+					if (!bypassPhone && this.BASE_HEADING == null && !isNaN(mobileGyro.heading)) { // FIRST TIME
+						this.BASE_HEADING = mobileGyro.heading;
+
+						this.leftX = this.BASE_HEADING - this.ALPHA_DIFF;
+						this.rightX = this.BASE_HEADING + this.ALPHA_DIFF;
+
+						this.rightXeffective = this.rightX % 360;
+						this.leftXeffective = (this.leftX < 0) ? 360 - Math.abs(this.leftX) : this.leftX;
+
+						extraData['leftX'] = this.leftX;
+						extraData['rightX'] = this.rightX;
+						extraData['absLeftX'] = Math.abs(this.leftX);
+						extraData['leftXeffective'] = this.leftXeffective;
+						extraData['rightXeffective'] = this.rightXeffective;
+					}
+
+					if (bypassPhone || this.leftXeffective !== null) {
+						if (bypassPhone) {
+							this.cursor.x = this.game.input.mousePointer.x;
+							this.cursor.y = this.game.input.mousePointer.y;
+						} else {
+							res = getXandYfromPhoneData(mobileGyro);
+							this.cursor.x = res.x;
+							this.cursor.y = res.y;
+						}
+
+						if (!bypassPhone && isFire) {
+							this.onclick();
+							isFire = false;
+						}
+					}
+				}
+			};
+
+			function startGame() {
+				game.state.start('MainMenu');
+			}
+
+			function displayCode() {
+				game.state.start('LinkSmartphone');
+			}
+
+			(function() {
+				if (isMobile) {
+
+					var mobileIsOk = false;
+					if (!takeAccelerometer || (takeAccelerometer && window.DeviceMotionEvent != undefined)) {
+						if (!takeGyroscope || (takeGyroscope && window.DeviceOrientationEvent != undefined)) {
+							document.getElementById("mobile").style.display = "block";
+
+							var mT = $(window).height() / 2 - $("#fire_btn").height() / 2;
+							$("#fire_btn").css("padding-top", mT + "px");
+							$("#fire_btn").click(function() {
+								socket.emit('fire', QueryString.ID);
+							});
+
+							mobileIsOk = true;
+							launchSockets();
+						}
+					}
+
+					if (!mobileIsOk) {
+						// todo
+					}
+				} else {
+					document.getElementById("desktop").style.display = "block";
+					launchPhaserGame();
+					launchSockets();
+				}
+			})();
+			
+        </script>
+    </body>
+</html>

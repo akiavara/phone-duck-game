@@ -1,0 +1,25 @@
+body {
+	margin: 0;
+	padding: 0;
+	background: black;
+	color: white;
+}
+#desktop {
+	display: none;
+	width: 800px;
+	height: 480px;
+	margin: 25px auto;
+	border: 2px solid white;
+}
+#desktop h2 {
+	margin-top: 150px;
+	text-align: center;
+	font-size: 45px;
+}
+#desktop h2 {
+	display: none;
+}
+#mobile {
+	display: none;
+	text-align: center;
+}
