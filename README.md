@@ -15,9 +15,10 @@ There is 6 folders in order to show all steps of this project. Each folder is a 
 | `6_leave_my_duck_alone` | The final project, a small game that has to be improved |
 
 ## Installation
-To be able to launch the project you must install nodejs (https://nodejs.org/en/) in order to serve all files and socket.io:
+To be able to launch the project you must install nodejs (https://nodejs.org/en/) in order to serve all files and socket.io + uuid:
 ```
 $ npm install socket.io
+$ npm install node-uuid
 ```
 
 You are now able to start your server by doing:
